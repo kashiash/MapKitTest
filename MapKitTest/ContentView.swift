@@ -51,7 +51,10 @@ struct ContentView: View {
                 .tag(2)
 
         }
-        .mapStyle(.standard(pointsOfInterest: []))
+      //  .mapStyle(.standard(pointsOfInterest: []))
+      //  .mapStyle(.imagery(elevation: .realistic))
+      //  .mapStyle(.hybrid(elevation: .realistic, pointsOfInterest: [.park, .parking], showsTraffic: true))
+        .mapStyle(.standard(emphasis: .muted))
     }
 }
 

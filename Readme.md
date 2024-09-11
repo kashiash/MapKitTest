@@ -212,6 +212,7 @@ W tym celu będziemy musieli użyć funkcji Beta wprowadzonej na WWDC24. Zachęc
 
 
 ### Styl mapy
+
 To była dość długa jednolinijkowa instrukcja, ale teraz możemy przejść do kolejnej kluczowej części MapKit, czyli stylu mapy (`MapStyle`), który możemy zastosować do naszej mapy! Istnieją trzy różne style, a dla każdego z nich mamy zestaw parametrów, które możemy zdefiniować dla dalszej personalizacji.
 
 #### Imagery
@@ -225,7 +226,10 @@ Map(initialPosition: initialPosition)
     .mapStyle(.imagery(elevation: .realistic))
 ```
 
+![image-20240911231412380](image-20240911231412380.png)
+
 #### Hybrid
+
 Styl `hybrid` można uznać za rozszerzenie stylu `imagery`, gdzie oprócz obrazu satelitarnego obszaru mamy również ścieżki dróg z ich nazwami nałożonymi na mapę. Oprócz `elevation`, możemy również ustawić:
 - **pointsOfInterest:** Kolekcja `PointOfInterestCategories`, które mapa wyświetla.
 - **showsTraffic:** Wartość logiczna wskazująca, czy mapa wyświetla ruch drogowy.
@@ -249,7 +253,10 @@ Map(initialPosition: initialPosition)
     .mapStyle(.standard(emphasis: .muted))
 ```
 
+![image-20240911231635275](image-20240911231635275.png)
+
 ### Adnotacje i nakładki
+
 Podczas ustawiania początkowej zawartości mapy użyliśmy już niektórych funkcji, ale przyjrzyjmy się bliżej wszystkim ciekawym elementom, które możemy dodać do mapy! Oto typy `MapContent`, które możemy dodać do `MapContentBuilder`:
 - **Annotation**
 - **UserAnnotation**
