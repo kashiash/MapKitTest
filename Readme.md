@@ -41,6 +41,8 @@ struct MapBaseView: View {
 }  
 ```
 
+![image-20240911225245104](image-20240911225245104.png)
+
 Mapa oddalona, aby pokazać cały kraj? Prawdopodobnie nie jest to coś, czego chcesz w 99.999% przypadków!  
 Skonfigurujmy to!
 
@@ -61,7 +63,7 @@ Oto przykład `MapCameraPosition` utworzonego z `camera`, wyśrodkowanego na Nik
 let initialPosition = MapCameraPosition.camera(
     MapCamera(
         centerCoordinate: CLLocationCoordinate2D(latitude: 50.2395, longitude: 19.0741),
-        distance: 1000,
+        distance: 2000,
         heading: 0,
         pitch: 0
     )
@@ -72,7 +74,10 @@ I skonstruujmy naszą mapę używając tej pozycji:
 Map(initialPosition: initialPosition)
 ```
 
+![image-20240911225421392](image-20240911225421392.png)
+
 Innym sposobem tworzenia `MapCameraPosition`, który może okazać się użyteczny, a o którym już wcześniej wspomniałem, jest `static func userLocation(followsHeading: Bool, fallback: MapCameraPosition) -> MapCameraPosition`. Metoda ta tworzy pozycję kamery wyśrodkowaną na aktualnej lokalizacji użytkownika z określoną pozycją zapasową i opcjonalnie śledzi kierunek użytkownika.
+
 ```swift
 let userLocation = MapCameraPosition.userLocation(fallback: MapCameraPosition.camera(
     MapCamera(
@@ -139,6 +144,8 @@ var body: some View {
         }
 }
 ```
+![image-20240911225537922](image-20240911225537922.png)
+
 Wkrótce omówimy szczegóły dotyczące markerów i adnotacji w dalszej części.
 
 ### Ogranicz interakcje użytkownika

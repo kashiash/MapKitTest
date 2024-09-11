@@ -13,7 +13,7 @@ struct ContentView: View {
     let initialPosition = MapCameraPosition.camera(
         MapCamera(
             centerCoordinate: CLLocationCoordinate2D(latitude: 50.2395, longitude: 19.0741),
-            distance: 1000,
+            distance: 2000,
             heading: 0,
             pitch: 0
         )
@@ -37,6 +37,7 @@ struct ContentView: View {
     )
 
     var body: some View {
+
         Map(bounds: bounds) {
 
             Annotation("Stadion", coordinate: CLLocationCoordinate2D(latitude: 50.28819, longitude: 18.97358)) {
