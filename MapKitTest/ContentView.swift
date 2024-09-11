@@ -12,8 +12,8 @@ struct ContentView: View {
 
     let initialPosition = MapCameraPosition.camera(
         MapCamera(
-            centerCoordinate: CLLocationCoordinate2D(latitude: 50.2395, longitude: 19.0741),
-            distance: 2000,
+            centerCoordinate: CLLocationCoordinate2D(latitude: 50.28199, longitude: 18.994181),
+            distance: 800,
             heading: 0,
             pitch: 0
         )
@@ -35,20 +35,23 @@ struct ContentView: View {
         minimumDistance: 100,
         maximumDistance: 5000
     )
+    @State private var selection: MapFeature? = nil
+    @State private var selectedTag: Int?
 
     var body: some View {
 
-        Map(bounds: bounds) {
+        Map(initialPosition: initialPosition, selection: $selectedTag) {
 
-            Annotation("Stadion", coordinate: CLLocationCoordinate2D(latitude: 50.28819, longitude: 18.97358)) {
-                Circle()
-                    .fill(Color.red.opacity(0.3))
-                    .frame(width: 300, height: 300)
-            }
+            Marker("Orange", coordinate: CLLocationCoordinate2D(latitude: 50.28199,  longitude: 18.99360))
+                .tint(.orange)
+                .tag(1)
 
-            Marker("Słonie", coordinate: CLLocationCoordinate2D(latitude: 50.28199,  longitude: 18.99360))
+            Marker("Red", coordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181))
                 .tint(.red)
+                .tag(2)
+
         }
+        .mapStyle(.standard(pointsOfInterest: []))
     }
 }
 

@@ -156,7 +156,8 @@ Na przykład, aby zezwolić tylko na obracanie i nachylanie, możemy ustawić pa
 Map(initialPosition: initialPosition, interactionModes: [.rotate, .pitch])
 ```
 
-Pełną listę dostępnych `MapInteractionModes` znajdziesz tutaj.  https://developer.apple.com/documentation/mapkit/mapinteractionmodes
+Pełną listę dostępnych `MapInteractionModes` znajdziesz tutaj:  https://developer.apple.com/documentation/mapkit/mapinteractionmodes
+
 Jeśli nie chcesz, aby użytkownik w ogóle mógł wchodzić w interakcję z mapą, po prostu ustaw kolekcję jako pustą tablicę!
 
 
@@ -185,13 +186,13 @@ Możemy umożliwić wybór niestandardowych markerów i adnotacji, które dodali
 var body: some View {
     Map(initialPosition: initialPosition, selection: $selectedTag) {
 
-        Marker("Orange", coordinate: CLLocationCoordinate2D(latitude: 39.19, longitude: -106.817535))
-            .tint(.orange)
-            .tag(1)
-        
-        Marker("Red", coordinate: CLLocationCoordinate2D(latitude: 39.191, longitude: -106.817535))
-            .tint(.red)
-            .tag(2)
+            Marker("Orange", coordinate: CLLocationCoordinate2D(latitude: 50.28199,  longitude: 18.99360))
+                .tint(.orange)
+                .tag(1)
+
+            Marker("Red", coordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181))
+                .tint(.red)
+                .tag(2)
 
     }
     .mapStyle(.standard(pointsOfInterest: []))
@@ -199,6 +200,8 @@ var body: some View {
 ```
 
 (Ignoruj `mapStyle` tutaj na razie, przejdziemy do szczegółów za kilka sekund. Ustawiłem go tak, aby markery/adnotacje dla innych elementów `MapFeatures` były ukryte, a nasze markery były łatwo rozpoznawalne).
+
+![image-20240911230956140](image-20240911230956140.png)
 
 Ukryłem wszystkie inne elementy, więc trudno to rozpoznać na gifie powyżej. Jednak chciałbym zaznaczyć, że używając `Binding<SelectedValue?>` z niestandardowym tagiem, NIE będziemy mogli wybierać wbudowanych `MapFeatures`!
 
