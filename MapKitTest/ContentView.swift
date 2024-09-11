@@ -40,21 +40,28 @@ struct ContentView: View {
 
     var body: some View {
 
-        Map(initialPosition: initialPosition, selection: $selectedTag) {
+        Map(initialPosition: .camera(MapCamera(
+            centerCoordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181),
+            distance: 1000,
+            heading: 0,
+            pitch: 0
+        ))) {
+            Annotation("Annotation", coordinate: CLLocationCoordinate2D(latitude: 50.28199,  longitude: 18.99360)) {
+                Image(systemName: "flag")
+                    .padding(.all, 8)
+                    .background(RoundedRectangle(cornerRadius: 5).fill(.yellow))
+            }
 
-            Marker("Orange", coordinate: CLLocationCoordinate2D(latitude: 50.28199,  longitude: 18.99360))
-                .tint(.orange)
-                .tag(1)
-
-            Marker("Red", coordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181))
+            Marker("Marker", coordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181))
                 .tint(.red)
-                .tag(2)
 
+            MapCircle(center: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181), radius: 100)
+                .foregroundStyle(.red.opacity(0.2))
         }
-      //  .mapStyle(.standard(pointsOfInterest: []))
-      //  .mapStyle(.imagery(elevation: .realistic))
-      //  .mapStyle(.hybrid(elevation: .realistic, pointsOfInterest: [.park, .parking], showsTraffic: true))
-        .mapStyle(.standard(emphasis: .muted))
+        .mapStyle(.standard(pointsOfInterest: []))
+        .onAppear {
+            print(CLLocationManager().authorizationStatus.rawValue)
+        }
     }
 }
 

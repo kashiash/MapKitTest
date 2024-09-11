@@ -269,6 +269,7 @@ Podczas ustawiania początkowej zawartości mapy użyliśmy już niektórych fun
 Oto kilka przykładów:
 
 ##### Annotation, Marker, MapCircle
+
 ```swift
 var body: some View {
     Map(initialPosition: .camera(MapCamera(
@@ -296,7 +297,10 @@ var body: some View {
 }
 ```
 
+<img src="image-20240911232257573.png" alt="image-20240911232257573" style="zoom:67%;" />
+
 ##### MapPolygon
+
 ```swift
 MapPolygon(coordinates: [
     CLLocationCoordinate2D(latitude: 39.190, longitude: -106.8175),
