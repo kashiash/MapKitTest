@@ -476,7 +476,7 @@ private struct DemoView: View {
         pitch: 0
     ))
     
-    @State private var position: MapCameraPosition = Self.aspen
+    @State private var position: MapCameraPosition = Self.zoo
     @State private var selection: MapSelection<Int>?
 
     var body: some View {
@@ -532,7 +532,7 @@ private struct DemoView: View {
         pitch: 0
     ))
        
-    @State private var position: MapCameraPosition = Self.aspen
+    @State private var position: MapCameraPosition = Self.planetary
 
     var body: some View {
         Map(position: $position)
