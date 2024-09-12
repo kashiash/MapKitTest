@@ -622,4 +622,6 @@ private struct DemoView: View {
 }
 ```
 
+![image-20240912161437521](image-20240912161437521.png)
+
 Jak widać, współrzędne w lewym dolnym rogu aktualizują się, gdy przesuwamy mapę!

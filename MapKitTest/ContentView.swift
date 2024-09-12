@@ -101,7 +101,7 @@ struct ContentView: View {
                         .padding(.vertical, 4)
                         .padding(.horizontal, 8)
                         .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
-                        .padding(.all, 16)
+                        .padding(.all, 10)
                 }
             })
     }
