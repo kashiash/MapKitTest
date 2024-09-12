@@ -58,52 +58,67 @@ struct ContentView: View {
 
     @State private var centerCoordinate: CLLocationCoordinate2D? = Self.planetary.camera?.centerCoordinate
 
-    var body: some View {
-        Map(position: $position)
-            .mapStyle(.imagery(elevation: .realistic))
-            .overlay(alignment: .top, content: {
-                HStack(spacing: 16) {
-                    Button(action: {
-                        position = Self.planetary
-                    }, label: {
-                        Text("Planetarium")
-                            .font(.title3)
-                            .foregroundStyle(.white)
-                            .padding(.vertical, 4)
-                            .padding(.horizontal, 8)
-                            .frame(maxWidth: .infinity)
-                            .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
-                    })
+    @State private var userTapLocation: CLLocationCoordinate2D?
 
-                    Button(action: {
-                        position = Self.stadium
-                    }, label: {
-                        Text("Górnik Zabrze")
+    var body: some View {
+        MapReader { proxy in
+            Map(position: $position)
+            {
+                if let userTapLocation = userTapLocation {
+                     Marker("tapped!", coordinate: userTapLocation)
+                         .tint(.orange)
+                 }
+            }
+                .mapStyle(.imagery(elevation: .realistic))
+                .overlay(alignment: .top, content: {
+                    HStack(spacing: 16) {
+                        Button(action: {
+                            position = Self.planetary
+                        }, label: {
+                            Text("Planetarium")
+                                .font(.title3)
+                                .foregroundStyle(.white)
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 8)
+                                .frame(maxWidth: .infinity)
+                                .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+                        })
+
+                        Button(action: {
+                            position = Self.stadium
+                        }, label: {
+                            Text("Górnik Zabrze")
+                                .font(.title3)
+                                .foregroundStyle(.white)
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 8)
+                                .frame(maxWidth: .infinity)
+                                .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+                        })
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
+                    .padding(.all, 16)
+                })
+                .onMapCameraChange(frequency: .continuous) { context in
+                    self.centerCoordinate = context.region.center
+                }
+                .overlay(alignment: .bottomLeading, content: {
+                    if let centerCoordinate = centerCoordinate {
+                        Text("\(centerCoordinate.latitude), \(centerCoordinate.longitude)")
                             .font(.title3)
                             .foregroundStyle(.white)
                             .padding(.vertical, 4)
                             .padding(.horizontal, 8)
-                            .frame(maxWidth: .infinity)
                             .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
-                    })
+                            .padding(.all, 10)
+                    }
+                })
+                .onTapGesture { position in
+                    if let coordinate = proxy.convert(position, from: .local) {
+                        self.userTapLocation = coordinate
+                    }
                 }
-                .fixedSize(horizontal: true, vertical: false)
-                .padding(.all, 16)
-            })
-            .onMapCameraChange(frequency: .continuous) { context in
-                self.centerCoordinate = context.region.center
-            }
-            .overlay(alignment: .bottomLeading, content: {
-                if let centerCoordinate = centerCoordinate {
-                    Text("\(centerCoordinate.latitude), \(centerCoordinate.longitude)")
-                        .font(.title3)
-                        .foregroundStyle(.white)
-                        .padding(.vertical, 4)
-                        .padding(.horizontal, 8)
-                        .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
-                        .padding(.all, 10)
-                }
-            })
+        }
     }
     
 }

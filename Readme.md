@@ -625,3 +625,53 @@ private struct DemoView: View {
 ![image-20240912161437521](image-20240912161437521.png)
 
 Jak widać, współrzędne w lewym dolnym rogu aktualizują się, gdy przesuwamy mapę!
+
+## Konwersja współrzędnych ekranu na rzeczywistą lokalizację geograficzną
+
+#### W jakich scenariuszach możemy chcieć przekonwertować współrzędne ekranu na rzeczywistą lokalizację geograficzną na mapie?
+
+Na przykład możemy chcieć, aby użytkownik mógł wybrać dowolną lokalizację na mapie i stworzyć tam nowy marker, reprezentujący jego ulubione miejsce! Dzięki `MapReader` i `MapProxy`, możemy to zrobić w kilku linijkach kodu!
+
+
+
+Wszystko, co musimy zrobić, to opakować naszą mapę w `MapReader` i użyć obiektu `MapProxy`, który umożliwia konwersję lokalizacji ekranu na lokalizacje mapy i odwrotnie.  
+Możesz również użyć tego proxy do konwersji między `MapCamera` a `MKMapRect` lub `MKCoordinateRegion`, ale to zostawimy na później!
+
+Zobaczmy przykład, w którym wyświetlimy marker w miejscu, na które użytkownik kliknie.
+
+```swift
+import SwiftUI
+import MapKit
+
+private struct DemoView: View {
+    static let stadium = MapCameraPosition.camera(MapCamera(
+        centerCoordinate: CLLocationCoordinate2D(latitude: 50.296196, longitude: 18.767794),
+        distance: 1000,
+        heading: 0,
+        pitch: 0
+    ))
+    
+    @State private var position: MapCameraPosition = Self.stadium
+    @State private var userTapLocation: CLLocationCoordinate2D?
+
+    var body: some View {
+        MapReader { proxy in
+            Map(position: $position) {
+                if let userTapLocation = userTapLocation {
+                    Marker("tapped!", coordinate: userTapLocation)
+                        .tint(.orange)
+                }
+            }
+            .onTapGesture { position in
+                if let coordinate = proxy.convert(position, from: .local) {
+                    self.userTapLocation = coordinate
+                }
+            }
+        }
+    }
+}
+```
+
+![image-20240912165126703](image-20240912165126703.png)
+
+I to wszystko!
