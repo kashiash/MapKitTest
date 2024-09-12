@@ -55,20 +55,29 @@ struct ContentView: View {
             Marker("Marker", coordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181))
                 .tint(.red)
 
-            MapCircle(center: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181), radius: 100)
-                .foregroundStyle(.red.opacity(0.2))
+            MapCircle(center: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181), radius: 180)
+                .foregroundStyle(.yellow.opacity(0.2))
 
-            MapPolygon(coordinates: [
-                CLLocationCoordinate2D(latitude: 50.280950, longitude: 18.994275),
-                CLLocationCoordinate2D(latitude: 50.280800, longitude: 18.994275),
-                CLLocationCoordinate2D(latitude: 50.280800, longitude: 18.994181),
-                CLLocationCoordinate2D(latitude: 50.280950, longitude: 18.994181)
-            ])
-            .foregroundStyle(.brown)
+//            MapPolygon(coordinates: [
+//                CLLocationCoordinate2D(latitude: 50.280950, longitude: 18.994275),
+//                CLLocationCoordinate2D(latitude: 50.280800, longitude: 18.994275),
+//                CLLocationCoordinate2D(latitude: 50.280800, longitude: 18.994181),
+//                CLLocationCoordinate2D(latitude: 50.280950, longitude: 18.994181)
+//            ])
+//            .foregroundStyle(.brown)
         }
-        .mapStyle(.standard(pointsOfInterest: []))
+     //   .mapStyle(.standard(pointsOfInterest: []))
+        .mapStyle(.hybrid(elevation: .realistic, pointsOfInterest: [.park, .parking], showsTraffic: true))
         .onAppear {
             print(CLLocationManager().authorizationStatus.rawValue)
+        }
+        .mapControls {
+            MapCompass()
+            MapPitchToggle()
+            MapScaleView()
+            MapUserLocationButton()
+          //  MapZoomStepper()
+          //  MapPitchSlider()
         }
     }
 }

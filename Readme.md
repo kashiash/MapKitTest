@@ -415,3 +415,5 @@ Przycisk, który ustawia ramkę mapy na lokalizacji użytkownika:
 ```
 
 **Powtórzenie:** Musimy dodać `Privacy — Location When In Use Usage Description` do `info.plist` i wywołać `CLLocationManager().requestWhenInUseAuthorization`, aby uzyskać zgodę użytkownika!
+
+![image-20240912073420216](image-20240912073420216.png)
