@@ -319,8 +319,10 @@ MapPolygon(coordinates: [
 
 ```swift
 MapPolyline(coordinates: [
-    CLLocationCoordinate2D(latitude: 39.191, longitude: -106.817),
-    CLLocationCoordinate2D(latitude: 39.193, longitude: -106.817535)
+                CLLocationCoordinate2D(latitude: 50.280950, longitude: 18.994275),
+                CLLocationCoordinate2D(latitude: 50.280800, longitude: 18.994275),
+                CLLocationCoordinate2D(latitude: 50.280800, longitude: 18.994181),
+                CLLocationCoordinate2D(latitude: 50.280950, longitude: 18.994181)
 ])
 .stroke(.blue, lineWidth: 8)
 ```
@@ -329,7 +331,7 @@ MapPolyline(coordinates: [
 ```swift
 let initialPosition = MapCameraPosition.userLocation(
     fallback: .camera(MapCamera(
-        centerCoordinate: CLLocationCoordinate2D(latitude: 39.1911, longitude: -106.817535),
+        centerCoordinate: CLLocationCoordinate2D(latitude:  50.280944,  longitude: 18.994181),
         distance: 1000,
         heading: 0,
         pitch: 0
@@ -417,3 +419,205 @@ Przycisk, który ustawia ramkę mapy na lokalizacji użytkownika:
 **Powtórzenie:** Musimy dodać `Privacy — Location When In Use Usage Description` do `info.plist` i wywołać `CLLocationManager().requestWhenInUseAuthorization`, aby uzyskać zgodę użytkownika!
 
 ![image-20240912073420216](image-20240912073420216.png)
+
+## Wsparcie dla jednoczesnego wybierania zarówno predefiniowanych funkcji mapy, jak i naszej własnej zawartości.
+
+**UWAGA od IOS18 !!!**
+
+Nie mogę uwierzyć, że nie mogliśmy obsługiwać wyboru zarówno dla predefiniowanych funkcji mapy, jak i dla naszej własnej zawartości aż do tegorocznej WWDC! (Na wszelki wypadek, czy możemy? Przynajmniej ja żyję w 2024 roku, pisząc to!).  
+W poprzednim artykule, **Mapy, Style, Nakładki i Kontrolki!**, przedstawiłem, jak możemy obsługiwać wybór na dotykalnej funkcji mapy za pomocą `selection: Binding<MapFeature?>`, jak poniżej:
+
+```swift
+@State private var selection: MapFeature? = nil
+
+var body: some View {
+    Map(initialPosition: initialPosition, selection: $selection)
+}
+```
+
+Albo obsługiwać wybór dla dodanej niestandardowej zawartości używając `Binding<SelectedValue?>`.
+```swift
+@State private var selectedTag: Int?
+
+var body: some View {
+    Map(initialPosition: initialPosition, selection: $selectedTag) {
+            Marker("Orange", coordinate: CLLocationCoordinate2D(latitude: 50.28199,  longitude: 18.99360))
+                .tint(.orange)
+                .tag(1)
+
+            Marker("Red", coordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181))
+                .tint(.red)
+                .tag(2)
+
+    }
+    .mapStyle(.standard(pointsOfInterest: []))
+}
+```
+
+Jednak, jak wspomniałem w moim poprzednim artykule, żadne z powyższych podejść nie umożliwia wyboru zarówno dla predefiniowanych funkcji mapy, jak i dla naszej własnej zawartości. Aby obsłużyć oba, musimy użyć nowych funkcji beta wprowadzonych na WWDC24!  
+Zobaczmy, jak to działa!
+
+### Obsługa obydwu za pomocą Map Selection
+
+Kluczem jest użycie struktury `MapSelection`. **Uwaga: jest to nadal funkcja, dostępna tylko dla iOS 18.0+.  **
+`MapSelection` to wartość reprezentująca wybraną funkcję na mapie, która może być zainicjowana z `MapFeature` lub `SelectionValue: Hashable`. To dokładnie to, czego potrzebujemy!
+
+Oto jak możemy to wykorzystać:
+
+```swift
+import SwiftUI
+import MapKit
+
+private struct DemoView: View {
+    static let zoo = MapCameraPosition.camera(MapCamera(
+        centerCoordinate: CLLocationCoordinate2D(latitude: 50.28199,  longitude: 18.99360),
+        distance: 1000,
+        heading: 0,
+        pitch: 0
+    ))
+    
+    @State private var position: MapCameraPosition = Self.aspen
+    @State private var selection: MapSelection<Int>?
+
+    var body: some View {
+        Map(position: $position, selection: $selection) {
+
+            Marker("Orange", coordinate: CLLocationCoordinate2D(latitude: 50.28199,  longitude: 18.99360))
+                .tint(.orange)
+                .tag(1)
+
+            Marker("Red", coordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181))
+                .tint(.red)
+                .tag(2)
+        }
+    }
+}
+```
+
+### Co tutaj zrobiliśmy?
+
+1. **Zmienna stanu `selection: MapSelection<Int>?`:** Ważne jest, aby nie używać tutaj `MapFeature`, aby adnotacje/markery, które sami zdefiniowaliśmy, mogły być również wybieralne.
+2. **Tagowanie markerów:** Zamiast zwykłej liczby całkowitej (`Int`), opakowujemy ją w `MapSelection`.
+
+### Podsumowanie
+Trzymając się powyższych wytycznych, możemy teraz obsługiwać wybór zarówno dla naszej własnej zawartości, jak i dla funkcji mapy, które znajdują się na samej mapie.
+
+## Ustawianie i Śledzenie Pozycji Mapy
+
+Kiedy pracujemy z mapą, możliwość przełączania się między różnymi pozycjami, na przykład w odpowiedzi na wyszukiwania użytkownika w różnych lokalizacjach, to bardzo często potrzebna funkcja. Inną, którą możemy chcieć, jest śledzenie pozycji mapy, gdy użytkownik ją przesuwa.  
+Możesz pomyśleć, że wystarczy przekazać `position: Binding<MapCameraPosition>` podczas inicjalizacji mapy i odczytać `position`, aby pobrać pozycję mapy. Nie do końca!  
+Sprawdźmy to!
+
+### Konfiguracja
+Prosta mapa z początkową pozycją wyśrodkowaną w Aspen, Kolorado:
+
+```swift
+import SwiftUI
+import MapKit
+
+private struct DemoView: View {
+    static let aspen = MapCameraPosition.camera(MapCamera(
+        centerCoordinate: CLLocationCoordinate2D(latitude: 39.1911, longitude: -106.817535),
+        distance: 1000,
+        heading: 0,
+        pitch: 0
+    ))
+
+    static let shibuya = MapCameraPosition.camera(MapCamera(
+        centerCoordinate: CLLocationCoordinate2D(latitude: 35.6615, longitude: 139.703),
+        distance: 300,
+        heading: 0,
+        pitch: 0
+    ))
+       
+    @State private var position: MapCameraPosition = Self.aspen
+
+    var body: some View {
+        Map(position: $position)
+    }
+}
+```
+
+Szybko uruchommy aplikację, aby upewnić się, że jesteśmy na tej samej stronie!
+
+### Ustawianie pozycji
+Ustawienie pozycji jest proste.  
+Tak jak się spodziewasz, wystarczy, że ustawimy zmienną stanu `position` na nową wartość.
+
+```swift
+Map(position: $position)
+    .overlay(alignment: .top, content: {
+        HStack(spacing: 16) {
+            Button(action: {
+                position = Self.shibuya
+            }, label: {
+                Text("Shibuya, Tokyo")
+                    .font(.title3)
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .frame(maxWidth: .infinity)
+                    .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+            })
+            
+            Button(action: {
+                position = Self.aspen
+            }, label: {
+                Text("Aspen, Colorado")
+                    .font(.title3)
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .frame(maxWidth: .infinity)
+                    .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+            })
+        }
+        .fixedSize(horizontal: true, vertical: false)
+        .padding(.all, 16)
+    })
+```
+
+I gotowe! Możemy teraz przeskakiwać między Shibuya a Aspen!
+
+### Śledzenie zmiany pozycji mapy
+Możesz pomyśleć, że aby śledzić pozycję mapy, wystarczy pobrać `position.region` przy zmianie pozycji.  
+Niestety, nie! Jeśli spróbujemy wydrukować pozycję, zauważymy, że wszystkie wartości są `nil`… (z wyjątkiem momentu, gdy ją inicjalizujemy!)
+
+- `position.rect: nil`
+- `position.positionedByUser: true`
+- `position.region: nil`
+- `position.item: nil`
+- `position.camera: nil`
+
+Aby śledzić zmiany pozycji mapy, musimy użyć modyfikatora widoku `onMapCameraChange(frequency:_)`, który informuje nas, kiedy zmienia się pozycja — natychmiastowo (przy ustawieniu `continuous` dla `frequency`) lub po zakończeniu ruchu (`onEnd` dla `frequency`).
+
+Nie musisz używać powiązania (`binding`), aby być powiadamianym przez `onMapCameraChange`. Zobaczmy, jak to działa, dodając nakładkę pokazującą bieżącą pozycję mapy.
+
+```swift
+private struct DemoView: View {
+    // ...
+    
+    @State private var centerCoordinate: CLLocationCoordinate2D? = Self.aspen.camera?.centerCoordinate
+
+    var body: some View {
+        Map(position: $position)
+            .onMapCameraChange(frequency: .continuous) { context in
+                self.centerCoordinate = context.region.center
+            }
+            .overlay(alignment: .bottomLeading, content: {
+                if let centerCoordinate = centerCoordinate {
+                    Text("\(centerCoordinate.latitude), \(centerCoordinate.longitude)")
+                        .font(.title3)
+                        .foregroundStyle(.white)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+                        .padding(.all, 16)
+                }
+            })
+            // ...
+    }
+}
+```
+
+Jak widać, współrzędne w lewym dolnym rogu aktualizują się, gdy przesuwamy mapę!
