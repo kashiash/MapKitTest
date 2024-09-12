@@ -509,23 +509,25 @@ Możesz pomyśleć, że wystarczy przekazać `position: Binding<MapCameraPositio
 Sprawdźmy to!
 
 ### Konfiguracja
-Prosta mapa z początkową pozycją wyśrodkowaną w Aspen, Kolorado:
+Prosta mapa z początkową pozycją wyśrodkowaną na Planetarium w Chorzowie:
 
 ```swift
 import SwiftUI
 import MapKit
 
 private struct DemoView: View {
-    static let aspen = MapCameraPosition.camera(MapCamera(
-        centerCoordinate: CLLocationCoordinate2D(latitude: 39.1911, longitude: -106.817535),
+    //50.290625, 18.991975
+    static let planetary = MapCameraPosition.camera(MapCamera(
+        centerCoordinate: CLLocationCoordinate2D(latitude: 50.290625, longitude: 18.991975),
         distance: 1000,
         heading: 0,
         pitch: 0
     ))
 
-    static let shibuya = MapCameraPosition.camera(MapCamera(
-        centerCoordinate: CLLocationCoordinate2D(latitude: 35.6615, longitude: 139.703),
-        distance: 300,
+    //50.296196, 18.767794
+    static let stadium = MapCameraPosition.camera(MapCamera(
+        centerCoordinate: CLLocationCoordinate2D(latitude: 50.296196, longitude: 18.767794),
+        distance: 1000,
         heading: 0,
         pitch: 0
     ))
@@ -547,37 +549,37 @@ Tak jak się spodziewasz, wystarczy, że ustawimy zmienną stanu `position` na n
 ```swift
 Map(position: $position)
     .overlay(alignment: .top, content: {
-        HStack(spacing: 16) {
-            Button(action: {
-                position = Self.shibuya
-            }, label: {
-                Text("Shibuya, Tokyo")
-                    .font(.title3)
-                    .foregroundStyle(.white)
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 8)
-                    .frame(maxWidth: .infinity)
-                    .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+                HStack(spacing: 16) {
+                    Button(action: {
+                        position = Self.planetary
+                    }, label: {
+                        Text("Planetarium")
+                            .font(.title3)
+                            .foregroundStyle(.white)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+                    })
+
+                    Button(action: {
+                        position = Self.stadium
+                    }, label: {
+                        Text("Górnik Zabrze")
+                            .font(.title3)
+                            .foregroundStyle(.white)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+                    })
+                }
+                .fixedSize(horizontal: true, vertical: false)
+                .padding(.all, 16)
             })
-            
-            Button(action: {
-                position = Self.aspen
-            }, label: {
-                Text("Aspen, Colorado")
-                    .font(.title3)
-                    .foregroundStyle(.white)
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 8)
-                    .frame(maxWidth: .infinity)
-                    .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
-            })
-        }
-        .fixedSize(horizontal: true, vertical: false)
-        .padding(.all, 16)
-    })
 ```
 
-I gotowe! Możemy teraz przeskakiwać między Shibuya a Aspen!
+I gotowe! Możemy teraz przeskakiwać między Katowicami a Zabrzem!
 
 ### Śledzenie zmiany pozycji mapy
 Możesz pomyśleć, że aby śledzić pozycję mapy, wystarczy pobrać `position.region` przy zmianie pozycji.  
@@ -597,7 +599,7 @@ Nie musisz używać powiązania (`binding`), aby być powiadamianym przez `onMap
 private struct DemoView: View {
     // ...
     
-    @State private var centerCoordinate: CLLocationCoordinate2D? = Self.aspen.camera?.centerCoordinate
+    @State private var centerCoordinate: CLLocationCoordinate2D? = Self.planetary.camera?.centerCoordinate
 
     var body: some View {
         Map(position: $position)

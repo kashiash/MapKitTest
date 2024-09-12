@@ -35,51 +35,77 @@ struct ContentView: View {
         minimumDistance: 100,
         maximumDistance: 5000
     )
+
+    //50.290625, 18.991975
+    static let planetary = MapCameraPosition.camera(MapCamera(
+        centerCoordinate: CLLocationCoordinate2D(latitude: 50.290625, longitude: 18.991975),
+        distance: 500,
+        heading: 0,
+        pitch: 0
+    ))
+
+    //50.296196, 18.767794
+    static let stadium = MapCameraPosition.camera(MapCamera(
+        centerCoordinate: CLLocationCoordinate2D(latitude: 50.296196, longitude: 18.767794),
+        distance: 1000,
+        heading: 0,
+        pitch: 0
+    ))
+
     @State private var selection: MapFeature? = nil
     @State private var selectedTag: Int?
+    @State private var position: MapCameraPosition = Self.planetary
+
+    @State private var centerCoordinate: CLLocationCoordinate2D? = Self.planetary.camera?.centerCoordinate
 
     var body: some View {
+        Map(position: $position)
+            .mapStyle(.imagery(elevation: .realistic))
+            .overlay(alignment: .top, content: {
+                HStack(spacing: 16) {
+                    Button(action: {
+                        position = Self.planetary
+                    }, label: {
+                        Text("Planetarium")
+                            .font(.title3)
+                            .foregroundStyle(.white)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+                    })
 
-        Map(initialPosition: .camera(MapCamera(
-            centerCoordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181),
-            distance: 1000,
-            heading: 0,
-            pitch: 0
-        ))) {
-            Annotation("Annotation", coordinate: CLLocationCoordinate2D(latitude: 50.28199,  longitude: 18.99360)) {
-                Image(systemName: "flag")
-                    .padding(.all, 8)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(.yellow))
+                    Button(action: {
+                        position = Self.stadium
+                    }, label: {
+                        Text("Górnik Zabrze")
+                            .font(.title3)
+                            .foregroundStyle(.white)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+                    })
+                }
+                .fixedSize(horizontal: true, vertical: false)
+                .padding(.all, 16)
+            })
+            .onMapCameraChange(frequency: .continuous) { context in
+                self.centerCoordinate = context.region.center
             }
-
-            Marker("Marker", coordinate: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181))
-                .tint(.red)
-
-            MapCircle(center: CLLocationCoordinate2D(latitude: 50.280944,  longitude: 18.994181), radius: 180)
-                .foregroundStyle(.yellow.opacity(0.2))
-
-//            MapPolygon(coordinates: [
-//                CLLocationCoordinate2D(latitude: 50.280950, longitude: 18.994275),
-//                CLLocationCoordinate2D(latitude: 50.280800, longitude: 18.994275),
-//                CLLocationCoordinate2D(latitude: 50.280800, longitude: 18.994181),
-//                CLLocationCoordinate2D(latitude: 50.280950, longitude: 18.994181)
-//            ])
-//            .foregroundStyle(.brown)
-        }
-     //   .mapStyle(.standard(pointsOfInterest: []))
-        .mapStyle(.hybrid(elevation: .realistic, pointsOfInterest: [.park, .parking], showsTraffic: true))
-        .onAppear {
-            print(CLLocationManager().authorizationStatus.rawValue)
-        }
-        .mapControls {
-            MapCompass()
-            MapPitchToggle()
-            MapScaleView()
-            MapUserLocationButton()
-          //  MapZoomStepper()
-          //  MapPitchSlider()
-        }
+            .overlay(alignment: .bottomLeading, content: {
+                if let centerCoordinate = centerCoordinate {
+                    Text("\(centerCoordinate.latitude), \(centerCoordinate.longitude)")
+                        .font(.title3)
+                        .foregroundStyle(.white)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+                        .padding(.all, 16)
+                }
+            })
     }
+    
 }
 
 #Preview {
