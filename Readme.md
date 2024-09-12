@@ -675,3 +675,55 @@ private struct DemoView: View {
 ![image-20240912165126703](image-20240912165126703.png)
 
 I to wszystko!
+
+## Podniesienie aplikacji Mapy na wyższy poziom przy użyciu MKLocalSearch
+
+Nie można naprawdę wyobrazić sobie aplikacji mapowej bez funkcji wyszukiwania!
+
+Dzięki MKLocalSearch możemy przeprowadzić dwa rodzaje wyszukiwań:
+
+
+
+​	1.	Wyszukiwanie oparte na słowach kluczowych (zapytanie w języku naturalnym).
+
+​	2.	Wyszukiwanie, określając kategorie punktów zainteresowania (to także sposób, w jaki możesz uzyskać wszystkie MKMapItem dostępne w regionie!).
+
+Każde podejście ma swoje zastosowania, które omówimy w tym artykule!
+
+Na końcu znajdziesz pełny kod użyty w tym artykule. Możesz go skopiować i wkleić do swojego projektu, aby samemu przetestować podczas czytania!
+
+
+
+**Konfiguracja**
+
+
+
+Zacznijmy od dodania prostego kodu startowego:
+
+```swift
+private struct DemoView: View {
+    static let stadium = MapCameraPosition.camera(MapCamera(
+        centerCoordinate: CLLocationCoordinate2D(latitude: 50.296196, longitude: 18.767794),
+        distance: 1000,
+        heading: 0,
+        pitch: 0
+    ))
+    
+    @State private var position: MapCameraPosition = Self.stadium
+    @State private var region: MKCoordinateRegion? = Self.stadium.region
+    @State private var selection: MapSelection<Int>?
+    @State private var searchResultItems: [MKMapItem] = []
+
+    var body: some View {
+        Map(position: $position, selection: $selection) {
+            ForEach(searchResultItems, id: \.self) { item in
+                Marker(item: item)
+            }
+        }
+        .onMapCameraChange { context in
+            self.region = context.region
+        }
+    }
+}
+```
+
