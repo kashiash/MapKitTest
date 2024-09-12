@@ -966,10 +966,10 @@ private struct LookAroundView: View {
 
 struct LookAroundBaseView: View {
     
-    // Tokio, Shibuya
+
     private let initialPosition = MapCameraPosition.camera(
         MapCamera(
-            centerCoordinate: CLLocationCoordinate2D(latitude: 35.6615, longitude: 139.703),
+            centerCoordinate: CLLocationCoordinate2D(latitude:  50.296196, longitude: 18.767794),
             distance: 300,
             heading: 0,
             pitch: 0
