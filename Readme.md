@@ -727,3 +727,273 @@ private struct DemoView: View {
 }
 ```
 
+### Wyszukiwanie za pomocą słów kluczowych
+
+Oto dwa główne scenariusze, w których używamy wyszukiwania przy pomocy zapytania w języku naturalnym:
+1. Znalezienie konkretnej lokalizacji, np. Sosnowiec.
+2. Znalezienie wszystkich wyników pasujących do podanego słowa kluczowego, np. Piwiarnie.
+
+#### Znajdowanie Konkretnej Lokalizacji
+
+Najpierw sprawdźmy przypadek użycia, w którym szukamy konkretnej lokalizacji za pomocą `MKLocalSearch`.  
+Na przykład, oto jak wygląda wyszukiwanie dla Los Angeles:
+
+```swift
+private func findSosnowiec() async -> MKMapItem? {
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = "Sosnowiec"
+    request.addressFilter = .includingAll
+
+    let search = MKLocalSearch(request: request)
+    let response = try? await search.start()
+
+    return response?.mapItems.first
+}
+```
+
+Wszystko wydaje się dość proste, ale są dwa aspekty, na które chciałbym zwrócić uwagę.
+
+1. **Filtr adresu (`addressFilter`):** To nowa funkcja dodana na WWDC24, która pozwala ustawić, które opcje adresu mają być uwzględniane lub wykluczane w wynikach wyszukiwania.  
+   Na przykład, jeśli przekazujemy kod pocztowy jako `naturalLanguageQuery` i chcemy, aby wyniki były dopasowane tylko do kodu pocztowego, możemy ustawić to w następujący sposób:
+   ```swift
+   request.naturalLanguageQuery = "44-113" // kod pocztowy dla Gliwice Łabędy
+   request.addressFilter = MKAddressFilter(
+       including: [.postalCode]
+   )
+   ```
+   Aby zobaczyć wszystkie dostępne opcje dla `MKAddressFilter`, sprawdź `MKAddressFilter.Options`.
+
+2. **Błąd wyszukiwania:** Jeśli wyszukiwanie się nie powiedzie, tzn. nie możemy uzyskać żadnych wyników na podstawie podanych kryteriów, odpowiedź będzie `nil`, a my otrzymamy błąd operacji "operation couldn’t be completed" (błąd `MKErrorDomain` 4).
+
+#### Testowanie funkcji wyszukiwania
+
+Przetestujmy naszą funkcję wyszukiwania, dodając następujący przycisk do naszego widoku:
+
+```swift
+Button{
+  Task{
+    if let sosnowiec = await findSosnowiec() {
+      self.position = .region(    MKCoordinateRegion(center: sosnowiec.placemark.coordinate, latitudinalMeters: 500, longitudinalMeters: 500))
+    }
+  }
+} label : {
+  Text("Find Sosnowiec and GO!")
+  .foregroundStyle(.white)
+  .padding(.all, 8)
+  .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+
+}
+```
+
+Tak! W sekundę (lub nawet szybciej) przenosimy się z Zabrza do Sosnowca!
+
+#### Znajdowanie Dopasowań na Podstawie Słowa Kluczowego
+
+Podzieliłem ten scenariusz na osobną sekcję, aby pokazać inne parametry, które możemy ustawić w naszym żądaniu.  
+Zacznijmy od przykładu wyszukiwania ośrodków narciarskich, a następnie dokładniej przyjrzymy się, co zrobiliśmy:
+
+```swift
+private func findSkiResorts(in region: MKCoordinateRegion) async -> [MKMapItem] {
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = "ski resort"
+    request.region = region
+    request.regionPriority = .default
+    request.pointOfInterestFilter = MKPointOfInterestFilter(including: [.skiing])
+
+    let search = MKLocalSearch(request: request)
+    let response = try? await search.start()
+    return response?.mapItems ?? []
+}
+```
+
+W tym przypadku użyliśmy dwóch dodatkowych parametrów:
+
+1. **`regionPriority`:** To kolejna funkcja beta z WWDC24, która pozwala nam określić, jak ważny jest skonfigurowany region. Jeśli nie chcemy żadnych wyników spoza określonego regionu, możemy ustawić wartość na `required`.
+
+2. **`pointOfInterestFilter`:** Filtr, który listuje kategorie punktów zainteresowania do uwzględnienia lub wykluczenia w wynikach wyszukiwania. Jeśli chcemy, aby uwzględniono wszystkie typy punktów zainteresowania, możemy albo pominąć ten parametr, albo ustawić `request.pointOfInterestFilter = .includingAll`.
+
+#### Testowanie funkcji wyszukiwania
+
+Dodajmy kolejny przycisk do testowania:
+
+```swift
+Button(action: {
+    Task {
+        if let region = self.region {
+            let resorts = await findSkiResorts(in: region)
+            self.searchResultItems = resorts
+        }
+    }
+}, label: {
+    Text("Find Ski Resorts")
+        .foregroundStyle(.white)
+        .padding(.all, 8)
+        .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+})
+```
+
+### Wyszukiwanie według Punktów Zainteresowania
+
+Możesz się zastanawiać, czy możemy po prostu użyć powyższego podejścia i pominąć `naturalLanguageQuery`. Niestety, nie... Otrzymasz błąd operacji "operation couldn’t be completed" (błąd `MKErrorDomain` 4).
+
+Aby wyszukiwać na podstawie kategorii punktów zainteresowania bez podawania zapytania w języku naturalnym, musimy utworzyć `MKLocalSearch` przy użyciu `MKLocalPointsOfInterestRequest`.  
+Na przykład, aby znaleźć wszystkie restauracje:
+
+```swift
+private func findRestaurants(in region: MKCoordinateRegion) async -> [MKMapItem] {
+    let request = MKLocalPointsOfInterestRequest(coordinateRegion: region)
+    request.pointOfInterestFilter = MKPointOfInterestFilter(including: [.restaurant])
+
+    let search = MKLocalSearch(request: request)
+    let response = try? await search.start()
+    return response?.mapItems ?? []
+}
+```
+
+**Uwaga:** Podczas korzystania z `MKLocalPointsOfInterestRequest` wynik wyszukiwania jest ściśle ograniczony do określonego regionu. Jest to podobne do ustawienia `request.regionPriority = .required` w poprzednim przykładzie.
+
+#### Testowanie funkcji wyszukiwania
+
+Dodajmy jeszcze jeden przycisk:
+
+```swift
+Button(action: {
+    Task {
+        if let region = self.region {
+            let restaurants = await findRestaurants(in: region)
+            self.searchResultItems = restaurants
+        }
+    }
+}, label: {
+    Text("Find Restaurants")
+        .foregroundStyle(.white)
+        .padding(.all, 8)
+        .background(RoundedRectangle(cornerRadius: 4).fill(.gray))
+})
+```
+
+### Podsumowanie
+
+Osobiście używam `MKLocalPointsOfInterestRequest` zamiast `MKLocalSearch.Request` tylko wtedy, gdy chcę uzyskać **wszystkie** `MKMapItems` wszystkich typów `MKPointOfInterest` w danym regionie, ponieważ w takim przypadku nie mam żadnego słowa kluczowego, które mógłbym przekazać do `naturalLanguageQuery`.
+
+## Rozejrzyjmy się! (Look Around)
+
+**LookAroundPreview** to jedna z moich ulubionych funkcji MapKit. Oferuje ona widok w 360 stopniach na obrazy ulicy w wybranej lokalizacji.
+
+W tym artykule sprawdzimy, jak można użyć tej funkcji, aby dodać możliwość "rozglądania się" do naszej aplikacji mapowej.
+
+### Krótkie wprowadzenie
+
+Istnieją dwa sposoby na stworzenie **LookAroundPreview** i dodanie funkcji "rozglądania się" do naszej aplikacji.
+
+#### Sposób 1!
+
+Po prostu użyj struktury **LookAroundPreview**. Możemy ją zainicjować,:
+- dostarczając początkową scenę `MKLookAroundScene` za pomocą `init(initialScene: MKLookAroundScene?, allowsNavigation: Bool, showsRoadLabels: Bool, pointsOfInterest: PointOfInterestCategories, badgePosition: MKLookAroundBadgePosition)`, lub
+- dostarczając powiązanie (`binding`) sceny za pomocą `init(scene: Binding<MKLookAroundScene?>, allowsNavigation: Bool, showsRoadLabels: Bool, pointsOfInterest: PointOfInterestCategories, badgePosition: MKLookAroundBadgePosition)`.
+
+#### Sposób 2!
+
+Możemy również bezpośrednio utworzyć widok "Look Around" za pomocą modyfikatora widoku `lookAroundViewer` i dołączyć go do naszej mapy.
+
+### Czym różni się widok "Look Around" od "Look Around Preview"?
+
+Podgląd (`preview`) to w zasadzie tylko obraz lokalizacji. Gdy dotkniemy podglądu, otwiera się pełnoekranowy widok "Look Around", gdzie możemy się rzeczywiście rozglądać i poruszać, jeśli nawigacja jest dozwolona.  
+Osobiście nie lubię od razu otwierać widoku pełnoekranowego i cenię sobie ten podgląd pomiędzy, więc tutaj użyjemy podejścia z wykorzystaniem struktury **LookAroundPreview**!
+
+![image-20240912224655129](image-20240912224655129.png)
+
+### Rozejrzyjmy się!
+
+Czas się rozejrzeć!  
+Oto kroki, aby utworzyć **LookAroundPreview**:
+1. Pobierz współrzędne `CLLocationCoordinate2D`, które nas interesują.
+2. Utwórz `MKLookAroundSceneRequest` używając tych współrzędnych.
+3. Pobierz scenę `MKLookAroundScene` z tego żądania.
+4. Utwórz `LookAroundPreview` używając sceny i opcjonalnie ustaw `allowsNavigation`, `showsRoadLabels`, `pointsOfInterest` i `badgePosition`.
+
+### Uwaga
+
+`MKLookAroundScene` nie jest dostępna dla wszystkich lokalizacji! Jeśli wyślemy żądanie z `CLLocationCoordinate2D` dla miejsca, gdzie funkcja "rozglądania się" nie jest dostępna, `MKLookAroundScene` będzie miała wartość `nil`.
+
+### Przykład
+
+Przejdźmy do kodu!  
+Zrobimy prosty przykład, w którym pokażemy **LookAroundPreview** po dotknięciu funkcji mapy przez użytkownika.
+
+```swift
+import SwiftUI
+import MapKit
+
+private struct LookAroundView: View {
+    var selection: MapFeature
+    @State private var lookAroundScene: MKLookAroundScene?
+    
+    var body: some View {
+        LookAroundPreview(initialScene: lookAroundScene)
+            .overlay(alignment: .bottomLeading, content: {
+                if let title = selection.title {
+                    HStack {
+                        Text(title)
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.white)
+                    .padding(.all, 8)
+                    .background(RoundedRectangle(cornerRadius: 4).fill(.black))
+                    .padding(.all, 8)
+                }
+            })
+            .onChange(of: selection, initial: true, {
+                getLookAroundScene()
+            })
+    }
+    
+    func getLookAroundScene() {
+        lookAroundScene = nil
+        Task {
+            let request = MKLookAroundSceneRequest(coordinate: selection.coordinate)
+            do {
+                lookAroundScene = try await request.scene
+                if lookAroundScene == nil {
+                    print("Look Around Preview not available for the given coordinate.")
+                }
+            } catch (let error) {
+                print(error)
+            }
+        }
+    }
+}
+
+struct LookAroundBaseView: View {
+    
+    // Tokio, Shibuya
+    private let initialPosition = MapCameraPosition.camera(
+        MapCamera(
+            centerCoordinate: CLLocationCoordinate2D(latitude: 35.6615, longitude: 139.703),
+            distance: 300,
+            heading: 0,
+            pitch: 0
+        )
+    )
+    
+    @State private var selection: MapFeature? = nil
+    @State private var lookAroundScene: MKLookAroundScene?
+
+    
+    var body: some View {
+        Map(initialPosition: initialPosition, selection: $selection)
+            .overlay(alignment: .top, content: {
+                if let selection = selection {
+                    LookAroundView(selection: selection)
+                        .frame(height: 256)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .padding()
+                }
+            })
+    }
+}
+```
+
+I oto gotowe!
+
+![image-20240912224735906](image-20240912224735906.png)
